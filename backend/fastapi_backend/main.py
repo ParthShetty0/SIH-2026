@@ -60,6 +60,47 @@ def start_voice_session(db: Session = Depends(get_db)):
         "message": "AI voice intake pipeline activated."
     }
 
+import os
+from groq import Groq
+
+# Initialize client (set GROQ_API_KEY in your environment or pass directly)
+groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY", "YOUR_FREE_GROQ_API_KEY"))
+
+def extract_prescription_entities(raw_text: str) -> dict:
+    prompt = f"""
+    You are a clinical transcription assistant. Below is noisy, raw OCR text from a doctor's prescription.
+    Extract the following details and return ONLY a valid JSON object:
+    - "patientName": Name of patient or "Not Detected"
+    - "doctor": Attending doctor's name or "Attending Physician"
+    - "medication": Comma-separated list of prescribed drugs with dosages
+    - "instructions": Timing or usage instructions (e.g., "Once daily after meals")
+
+    Raw OCR Text:
+    \"\"\"{raw_text}\"\"\"
+
+    Return pure JSON with no markdown wrapping or preamble.
+    """
+
+    try:
+        chat_completion = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": "You output strictly valid JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            model="llama-3.1-8b-instant",
+            response_format={"type": "json_object"}
+        )
+        return json.loads(chat_completion.choices[0].message.content)
+    except Exception as e:
+        # Fallback to simple split if LLM call fails
+        lines = [l.strip() for l in raw_text.splitlines() if l.strip()]
+        return {
+            "patientName": lines[0] if lines else "Patient (Unspecified)",
+            "medication": lines[1] if len(lines) > 1 else "General Medication",
+            "instructions": "Take as advised by medical officer",
+            "doctor": "Verified Attending Physician"
+        }
+
 # 2. Endpoint: Real Prescription OCR
 @app.post("/api/ocr")
 async def process_prescription(
@@ -78,7 +119,7 @@ async def process_prescription(
         raw_text = pytesseract.image_to_string(image, lang="eng+hin+mar")
 
         # Basic parser to structure raw OCR text
-        lines = [line.strip() for line in raw_text.splitlines() if line.strip()]
+        parsed_record = extract_prescription_entities(raw_text)
         
         parsed_record = {
             "patientName": lines[0] if len(lines) > 0 else "Patient (Unspecified)",

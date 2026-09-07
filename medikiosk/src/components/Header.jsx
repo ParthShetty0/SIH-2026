@@ -27,11 +27,11 @@ export default function Header() {
             </span>
             <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              SYSTEM ONLINE
+              ONLINE
             </span>
           </div>
           <h1 className="text-base font-semibold text-slate-900 leading-tight">
-            {t('hospitalName')}
+            MediKiosk
           </h1>
         </div>
       </div>
