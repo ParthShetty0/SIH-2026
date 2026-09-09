@@ -5,3 +5,5 @@ dist/
 __pycache__/
 venv/
 kiosk.db
+.env
+backend/fastapi_backend/.env
