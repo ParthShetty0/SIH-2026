@@ -66,7 +66,6 @@ export default function App() {
         className="hidden"
       />
 
-      {/* Header needs zero props now */}
       <Header />
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 sm:p-12 max-w-6xl mx-auto w-full">
@@ -121,10 +120,17 @@ export default function App() {
         <span>MediKiosk OS v2.4 • Clinical Grade</span>
       </footer>
 
-      {/* LanguageModal needs only open/close states */}
       <LanguageModal isOpen={isLangOpen} onClose={() => setIsLangOpen(false)} />
 
-      <VoiceModal session={voiceSession} onClose={() => setVoiceSession(null)} />
+      {/* Conditionally rendered so audio never plays on initial site load */}
+      {voiceSession && (
+        <VoiceModal
+          session={voiceSession}
+          currentLang={i18n.language}
+          onClose={() => setVoiceSession(null)}
+        />
+      )}
+
       <OcrModal result={ocrResult} onClose={() => setOcrResult(null)} />
 
       {ocrError && (

@@ -8,10 +8,16 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
-    host: true,
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: true,
     allowedHosts: true,
+    headers: {
+      'ngrok-skip-browser-warning': 'true',
+    },
     hmr: {
-      clientPort: 443, // Forces Vite HMR to use standard HTTPS port through ngrok
+      protocol: 'wss',
+      clientPort: 443,
     },
     proxy: {
       '/api': {
